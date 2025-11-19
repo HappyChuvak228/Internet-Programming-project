@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Интерфейс управления задачами</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #000;
+            color: #fff;
+            margin: 0;
+            padding: 0;
+        }
+        .header {
+            background-color: #333;
+            padding: 10px;
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start;
+        }
+        .date-time {
+            font-size: 16px;
+        }
+        .status {
+            font-size: 16px;
+            margin-top: 5px;
+        }
+        .status.in-work {
+            color: green;
+        }
+        .status.on-break {
+            color: yellow;
+        }
+        .navigation {
+            display: flex;
+            justify-content: space-around;
+            padding: 10px;
+            background-color: #333;
+        }
+        .navigation button {
+            background-color: #000;
+            color: #fff;
+            border: none;
+            padding: 15px 30px;
+            cursor: pointer;
+            font-size: 18px;
+        }
+        .history {
+            padding: 20px;
+        }
+        .history ul {
+            list-style-type: none;
+            padding: 0;
+        }
+        .history li {
+            margin-bottom: 10px;
+            display: flex;
+            justify-content: space-between;
+        }
+        .history li span {
+            font-size: 16px;
+        }
+        .history li span.completed {
+            color: green;
+        }
+        .history li span.absent {
+            color: red;
+        }
+        .footer {
+            background-color: #333;
+            padding: 10px;
+            text-align: center;
+        }
+        .footer a {
+            color: #fff;
+            text-decoration: none;
+        }
+        .status-bar {
+            background-color: #333;
+            padding: 10px;
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start;
+        }
+        .status-bar .date-time {
+            font-size: 16px;
+        }
+        .status-bar .status {
+            font-size: 16px;
+            margin-top: 5px;
+        }
+        .status-bar .reload {
+            font-size: 16px;
+        }
+        .navigation-bar {
+            display: flex;
+            justify-content: space-around;
+            padding: 10px;
+            background-color: #333;
+        }
+        .navigation-bar button {
+            background-color: #000;
+            color: #fff;
+            border: none;
+            padding: 15px 30px;
+            cursor: pointer;
+            font-size: 18px;
+        }
+        .history-list {
+            padding: 20px;
+        }
+        .history-list ul {
+            list-style-type: none;
+            padding: 0;
+        }
+        .history-list li {
+            margin-bottom: 10px;
+            display: flex;
+            justify-content: space-between;
+        }
+        .history-list li span {
+            font-size: 16px;
+        }
+        .footer-bar {
+            background-color: #333;
+            padding: 10px;
+            text-align: center;
+        }
+        .footer-bar a {
+            color: #fff;
+            text-decoration: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="status-bar">
+        <div class="date-time" id="date-time"></div>
+        <div class="status in-work" id="status">Статус: в работе</div>
+    </div>
+    <div class="navigation-bar">
+        <button onclick="toggleStatus()">Перерыв</button>
+        <button onclick="nextTicket()">Следующий</button>
+        <button onclick="repeatTicket()">Повторно</button>
+        <button onclick="finishTicket()">Закончить</button>
+        <button onclick="transitionTicket()">Переход</button>
+        <button onclick="absentTicket()">Отсутствует</button>
+    </div>
+    <div class="current-ticket">
+        <h2>Текущий талон</h2>
+        <div id="current-ticket-number">Талон № 01</div>
+    </div>
+    <div class="history-list">
+        <h2>История за смену</h2>
+        <ul id="history-list">
+        </ul>
+    </div>
+    <div class="footer-bar">
+        <a href="#">Вернуться к кабинету руководителя</a>
+    </div>
+
+    <script>
+        let currentTicketNumber = 1;
+
+        function updateDateTime() {
+            const dateTimeElement = document.getElementById('date-time');
+            const now = new Date();
+            const date = now.toLocaleDateString();
+            const time = now.toLocaleTimeString();
+            dateTimeElement.textContent = `${date}, ${time}`;
+        }
+
+        function toggleStatus() {
+            const statusElement = document.getElementById('status');
+            if (statusElement.textContent === 'Статус: в работе') {
+                statusElement.textContent = 'Статус: Перерыв';
+                statusElement.classList.remove('in-work');
+                statusElement.classList.add('on-break');
+            } else {
+                statusElement.textContent = 'Статус: в работе';
+                statusElement.classList.remove('on-break');
+                statusElement.classList.add('in-work');
+            }
+        }
+
+        function finishTicket() {
+            const currentTicket = document.getElementById('current-ticket-number');
+            const historyList = document.getElementById('history-list');
+            const newItem = document.createElement('li');
+            newItem.innerHTML = `<span>Талон № ${currentTicketNumber}</span> <span class="completed">Завершено</span>`;
+            historyList.insertBefore(newItem, historyList.firstChild);
+            currentTicketNumber++;
+            currentTicket.textContent = `Талон № ${currentTicketNumber}`;
+        }
+
+        function transitionTicket() {
+            const currentTicket = document.getElementById('current-ticket-number');
+            currentTicketNumber++;
+            currentTicket.textContent = `Талон № ${currentTicketNumber}`;
+        }
+
+        function nextTicket() {
+            const currentTicket = document.getElementById('current-ticket-number');
+            currentTicketNumber++;
+            currentTicket.textContent = `Талон № ${currentTicketNumber}`;
+        }
+
+        function repeatTicket() {
+            const currentTicket = document.getElementById('current-ticket-number');
+            currentTicketNumber--;
+            currentTicket.textContent = `Талон № ${currentTicketNumber}`;
+        }
+
+        function absentTicket() {
+            const currentTicket = document.getElementById('current-ticket-number');
+            const historyList = document.getElementById('history-list');
+            const newItem = document.createElement('li');
+            newItem.innerHTML = `<span>Талон № ${currentTicketNumber}</span> <span class="absent">Отсутствует</span>`;
+            historyList.insertBefore(newItem, historyList.firstChild);
+            currentTicketNumber++;
+            currentTicket.textContent = `Талон № ${currentTicketNumber}`;
+        }
+
+        setInterval(updateDateTime, 1000);
+    </script>
+</body>
+</html>
