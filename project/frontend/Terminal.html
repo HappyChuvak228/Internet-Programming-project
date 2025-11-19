@@ -1,0 +1,814 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <title>Электронная очередь</title>
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: "Segoe UI", system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+    }
+
+    body {
+      background: #f5f5f7;
+      color: #222;
+      min-height: 100vh;
+      display: flex;
+      align-items: stretch;
+      justify-content: center;
+    }
+
+    .app {
+      width: 100%;
+      max-width: 1200px;
+      margin: 40px auto;
+      padding: 0 20px;
+    }
+
+    .screen {
+      display: none;
+      text-align: center;
+    }
+
+    .screen.active {
+      display: block;
+    }
+
+    h1 {
+      font-size: 26px;
+      letter-spacing: 0.06em;
+      color: #4a6bff;
+      text-transform: uppercase;
+      margin-bottom: 8px;
+    }
+
+    h2 {
+      font-size: 22px;
+      margin-bottom: 6px;
+      color: #333;
+    }
+
+    .subtitle {
+      font-size: 16px;
+      color: #777;
+      margin-bottom: 26px;
+    }
+
+    .big-buttons {
+      max-width: 800px;
+      margin: 0 auto;
+      display: flex;
+      flex-direction: column;
+      gap: 18px;
+    }
+
+    .big-button {
+      background: #020213;
+      color: #fff;
+      border-radius: 16px;
+      padding: 22px 40px;
+      font-size: 18px;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      border: none;
+      cursor: pointer;
+      box-shadow: 0 18px 28px rgba(0, 0, 0, 0.18);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 12px;
+      transition: transform 0.12s ease, box-shadow 0.12s ease, background 0.12s ease;
+    }
+
+    .big-button span.emoji {
+      font-size: 22px;
+    }
+
+    .big-button:hover {
+      background: #05052a;
+      transform: translateY(-2px);
+      box-shadow: 0 22px 32px rgba(0, 0, 0, 0.22);
+    }
+
+    .big-button:active {
+      transform: translateY(0);
+      box-shadow: 0 8px 18px rgba(0, 0, 0, 0.18);
+    }
+
+    .back-link {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      font-size: 14px;
+      color: #777;
+      margin-bottom: 20px;
+      cursor: pointer;
+      user-select: none;
+    }
+
+    .back-link span {
+      font-size: 18px;
+    }
+
+    .grid {
+      max-width: 820px;
+      margin: 0 auto;
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+      gap: 22px;
+      justify-items: center;
+    }
+
+    .card {
+      width: 190px;
+      height: 190px;
+      background: #ffffff;
+      border-radius: 18px;
+      border: 1px solid #ececec;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      cursor: pointer;
+      box-shadow: 0 18px 26px rgba(0, 0, 0, 0.06);
+      transition: box-shadow 0.12s ease, transform 0.12s ease, border-color 0.12s ease;
+    }
+
+    .card:hover {
+      transform: translateY(-2px);
+      border-color: #d0d0ff;
+      box-shadow: 0 22px 32px rgba(20, 20, 60, 0.18);
+    }
+
+    .card-emoji {
+      font-size: 34px;
+      margin-bottom: 6px;
+    }
+
+    .card-code {
+      font-size: 17px;
+      font-weight: 600;
+      color: #333;
+    }
+
+    .card-name {
+      font-size: 13px;
+      color: #999;
+      max-width: 150px;
+    }
+
+    .list {
+      max-width: 850px;
+      margin: 0 auto;
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+    }
+
+    .list-item {
+      background: #020213;
+      color: #fff;
+      border-radius: 12px;
+      padding: 18px 28px;
+      text-align: left;
+      border: none;
+      cursor: pointer;
+      font-size: 16px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      box-shadow: 0 16px 24px rgba(0, 0, 0, 0.18);
+      transition: background 0.12s ease, transform 0.12s ease, box-shadow 0.12s ease;
+    }
+
+    .list-item:hover {
+      background: #05052a;
+      transform: translateY(-2px);
+      box-shadow: 0 22px 32px rgba(0, 0, 0, 0.22);
+    }
+
+    .code-tag {
+      font-size: 14px;
+      opacity: 0.85;
+    }
+
+    /* Ticket */
+
+    .ticket-wrapper {
+      max-width: 620px;
+      margin: 0 auto;
+      background: #ffffff;
+      border-radius: 22px;
+      padding: 40px 40px 32px;
+      box-shadow: 0 24px 40px rgba(0, 0, 0, 0.12);
+    }
+
+    .ticket-number {
+      font-size: 22px;
+      color: #4a6bff;
+      margin-bottom: 20px;
+    }
+
+    .qr-placeholder {
+      width: 210px;
+      height: 210px;
+      border-radius: 18px;
+      border: 2px dashed #d7d7d7;
+      margin: 0 auto 28px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 42px;
+      color: #222;
+      background: #fafafa;
+    }
+
+    .ticket-main {
+      font-size: 16px;
+      margin-bottom: 6px;
+    }
+
+    .ticket-sub {
+      font-size: 15px;
+      color: #666;
+      margin-bottom: 26px;
+    }
+
+    .ticket-divider {
+      height: 1px;
+      background: #eee;
+      margin: 16px 0 26px;
+    }
+
+    .primary-button {
+      margin-top: 6px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      padding: 16px 32px;
+      background: #020213;
+      color: #fff;
+      border-radius: 14px;
+      border: none;
+      cursor: pointer;
+      font-size: 16px;
+      box-shadow: 0 18px 26px rgba(0, 0, 0, 0.18);
+      transition: background 0.12s ease, transform 0.12s ease, box-shadow 0.12s ease;
+    }
+
+    .primary-button:hover {
+      background: #05052a;
+      transform: translateY(-2px);
+      box-shadow: 0 24px 34px rgba(0, 0, 0, 0.22);
+    }
+
+    .primary-button:active {
+      transform: translateY(0);
+      box-shadow: 0 10px 18px rgba(0, 0, 0, 0.18);
+    }
+
+    .lock-emoji {
+      font-size: 18px;
+    }
+
+    @media (max-width: 720px) {
+      .ticket-wrapper {
+        padding: 30px 20px 24px;
+      }
+      .card {
+        width: 150px;
+        height: 160px;
+      }
+      .app {
+        margin-top: 20px;
+      }
+    }
+  </style>
+</head>
+<body>
+<div class="app">
+
+  <!-- Главный экран: выбор типа услуги -->
+  <section class="screen active" id="screen-main">
+    <h1>Электронная очередь</h1>
+    <div class="subtitle">Выберите тип услуги</div>
+
+    <div class="big-buttons">
+      <button class="big-button" onclick="goToScreen('screen-doc-level')">
+        <span class="emoji">📄</span>
+        <span>Подать документы</span>
+      </button>
+
+      <button class="big-button" onclick="goToScreen('screen-consult-list')">
+        <span class="emoji">💬</span>
+        <span>Консультации и вопросы</span>
+      </button>
+
+      <button class="big-button" onclick="goToScreen('screen-operator-list')">
+        <span class="emoji">👩‍💼</span>
+        <span>Выбор оператора</span>
+      </button>
+    </div>
+  </section>
+
+  <!-- Подача документов: выбор уровня образования -->
+  <section class="screen" id="screen-doc-level">
+    <div class="back-link" onclick="goToScreen('screen-main')">
+      <span>←</span> Назад
+    </div>
+    <h2>Подача документов</h2>
+    <div class="subtitle">Выберите тип образования</div>
+
+    <div class="big-buttons">
+      <button class="big-button" onclick="openFacultyGrid('bak')">
+        <span class="emoji">🎓</span>
+        <span>Бакалавриат / специалитет</span>
+      </button>
+      <button class="big-button" onclick="openFacultyGrid('mag')">
+        <span class="emoji">📊</span>
+        <span>Магистратура</span>
+      </button>
+      <button class="big-button" onclick="openFacultyGrid('asp')">
+        <span class="emoji">🔬</span>
+        <span>Аспирантура / ординатура</span>
+      </button>
+      <button class="big-button" onclick="openFacultyGrid('spo')">
+        <span class="emoji">🏫</span>
+        <span>Колледж (СПО)</span>
+      </button>
+    </div>
+  </section>
+
+  <!-- Сетка факультетов -->
+  <section class="screen" id="screen-faculties">
+    <div class="back-link" onclick="goBackFromFaculties()">
+      <span>←</span> Назад
+    </div>
+    <h2 id="faculties-title">Бакалавриат — выберите факультет</h2>
+    <div class="subtitle" id="faculties-subtitle">🎓 Программы бакалавриата и специалитета</div>
+
+    <div class="grid" id="faculties-grid">
+      <!-- сюда JS вставит карточки факультетов -->
+    </div>
+  </section>
+
+  <!-- Список направлений выбранного факультета -->
+  <section class="screen" id="screen-programs">
+    <div class="back-link" onclick="goBackFromPrograms()">
+      <span>←</span> Назад
+    </div>
+    <h2 id="programs-title">Направления подготовки</h2>
+    <div class="subtitle" id="programs-subtitle">Выберите направление для подачи документов</div>
+
+    <div class="list" id="programs-list">
+      <!-- сюда JS вставит направления -->
+    </div>
+  </section>
+
+  <!-- Консультации и вопросы: список услуг -->
+  <section class="screen" id="screen-consult-list">
+    <div class="back-link" onclick="goToScreen('screen-main')">
+      <span>←</span> Назад
+    </div>
+    <h2>Консультации и вопросы</h2>
+    <div class="subtitle">Выберите тему консультации</div>
+
+    <div class="list">
+      <button class="list-item"
+              onclick="createConsultTicket('Консультация по выбору образовательной программы')">
+        <span>Консультация по выбору образовательной программы</span>
+      </button>
+      <button class="list-item"
+              onclick="createConsultTicket('Консультация по вопросам оплаты и договоров')">
+        <span>Консультация по вопросам оплаты и договоров</span>
+      </button>
+      <button class="list-item"
+              onclick="createConsultTicket('Внесение изменений в заявление / Подача оригиналов')">
+        <span>Внесение изменений в заявление / Подача оригиналов</span>
+      </button>
+      <button class="list-item"
+              onclick="createConsultTicket('Предоставление особых прав (льготы)')">
+        <span>Предоставление особых прав (льготы)</span>
+      </button>
+      <button class="list-item"
+              onclick="createConsultTicket('Консультация по целевому приёму')">
+        <span>Консультация по целевому приёму</span>
+      </button>
+      <button class="list-item"
+              onclick="createConsultTicket('Консультация по вступительным испытаниям')">
+        <span>Консультация по вступительным испытаниям</span>
+      </button>
+      <button class="list-item"
+              onclick="createConsultTicket('Получение справки о приёме документов')">
+        <span>Получение справки о приёме документов</span>
+      </button>
+      <button class="list-item"
+              onclick="createConsultTicket('Иная услуга / Персональная консультация')">
+        <span>Иная услуга / Персональная консультация</span>
+      </button>
+    </div>
+  </section>
+
+  <!-- Выбор оператора -->
+  <!-- Выбор оператора -->
+<section class="screen" id="screen-operator-list">
+  <div class="back-link" onclick="goToScreen('screen-main')">
+    <span>←</span> Назад
+  </div>
+  <h2>Выберите оператора</h2>
+  <div class="subtitle">Для персональной консультации</div>
+
+  <div class="grid">
+    <div class="card" onclick="createOperatorTicket('Доржиева А.С.', 'Специалист по документам', 4.8)">
+      <div class="card-emoji">👤</div>
+      <div class="card-code">Доржиева А.С.</div>
+      <div class="card-name">Специалист по документам · ★ 4.8</div>
+    </div>
+
+    <div class="card" onclick="createOperatorTicket('Ринчинова Б.Б.', 'Консультант по поступлению', 4.9)">
+      <div class="card-emoji">👤</div>
+      <div class="card-code">Ринчинова Б.Б.</div>
+      <div class="card-name">Консультант по поступлению · ★ 4.9</div>
+    </div>
+
+    <div class="card" onclick="createOperatorTicket('Дашидондокова А.Б.', 'Специалист по целевым местам', 4.7)">
+      <div class="card-emoji">👤</div>
+      <div class="card-code">Дашидондокова А.Б.</div>
+      <div class="card-name">Специалист по целевым местам · ★ 4.7</div>
+    </div>
+
+    <div class="card" onclick="createOperatorTicket('Павлова И.А.', 'Эксперт по финансам', 5.0)">
+      <div class="card-emoji">👤</div>
+      <div class="card-code">Павлова И.А.</div>
+      <div class="card-name">Эксперт по финансам · ★ 5.0</div>
+    </div>
+  </div>
+</section>
+
+
+  <!-- Экран талона (общий для всех типов услуг) -->
+  <section class="screen" id="screen-ticket">
+    <div class="ticket-wrapper">
+      <div class="ticket-number" id="ticket-number">Талон № 000-000</div>
+
+      <div class="qr-placeholder">▢▢▢</div>
+
+      <div class="ticket-main" id="ticket-main-text">
+        Консультация по выбору образовательной программы
+      </div>
+      <div class="ticket-sub" id="ticket-sub-text">
+        Тип услуги: консультация
+      </div>
+
+      <div class="ticket-divider"></div>
+
+      <!-- Просьба была убрать «Талон отправлен по SMS» — здесь только кнопка -->
+      <button class="primary-button" onclick="goToScreen('screen-main')">
+        <span class="lock-emoji">🔒</span>
+        Вернуться в начало
+      </button>
+    </div>
+  </section>
+
+</div>
+
+<script>
+  //ДАННЫЕ 
+
+  // Факультеты по уровням образования
+  const facultyData = {
+    bak: {
+      title: "Бакалавриат — выберите факультет",
+      subtitle: "🎓 Программы бакалавриата и специалитета",
+      faculties: [
+        { code: "ФКНТ", full: "Факультет компьютерных наук и технологий", icon: "💻" },
+        { code: "ФЭиУ", full: "Факультет экономики и управления", icon: "📊" },
+        { code: "ФСТиД", full: "Факультет сервиса, технологии и дизайна", icon: "🎨" },
+        { code: "ФТН",  full: "Факультет технических наук", icon: "⚙️" },
+        { code: "ФЭТ",  full: "Электротехнический факультет", icon: "🔌" },
+        { code: "ФСГН", full: "Факультет социальных и гуманитарных наук", icon: "🌍" },
+        { code: "ЮФ",  full: "Юридический факультет", icon: "⚖️" },
+        { code: "ИПиБ",full: "Институт пищевой инженерии и биотехнологии", icon: "🔬" }
+      ]
+    },
+    mag: {
+      title: "Магистратура — выберите факультет",
+      subtitle: "🎓 Программы магистратуры",
+      faculties: [
+        { code: "ФКНТ", full: "Факультет компьютерных наук и технологий", icon: "💻" },
+        { code: "ФЭиУ", full: "Факультет экономики и управления", icon: "📊" },
+        { code: "ФСТиД", full: "Факультет сервиса, технологии и дизайна", icon: "🎨" },
+        { code: "ФТН",  full: "Факультет технических наук", icon: "⚙️" },
+        { code: "ФЭТ",  full: "Электротехнический факультет", icon: "🔌" },
+        { code: "ИПиБ", full: "Институт пищевой инженерии и биотехнологии", icon: "🔬" },
+        { code: "ЮФ",   full: "Юридический факультет", icon: "⚖️" }
+      ]
+    },
+    asp: {
+      title: "Аспирантура / ординатура — выберите направление",
+      subtitle: "🔬 Программы аспирантуры и ординатуры",
+      faculties: [
+        { code: "ФКНТ", full: "Факультет компьютерных наук и технологий", icon: "💻" },
+        { code: "ФЭиУ", full: "Факультет экономики и управления", icon: "📊" },
+        { code: "ФТН",  full: "Факультет технических наук", icon: "⚙️" },
+        { code: "ИПиБ", full: "Институт пищевой инженерии и биотехнологии", icon: "🔬" }
+      ]
+    },
+    spo: {
+      title: "Колледж (СПО) — выберите направление",
+      subtitle: "🏫 Среднее профессиональное образование",
+      faculties: [
+        { code: "ФКНТ", full: "Факультет компьютерных наук и технологий", icon: "💻" },
+        { code: "ФЭиУ", full: "Факультет экономики и управления", icon: "📊" },
+        { code: "ФСТиД", full: "Факультет сервиса, технологии и дизайна", icon: "🎨" },
+        { code: "ФЭТ",  full: "Электротехнический факультет", icon: "🔌" },
+        { code: "СФ",   full: "Строительный факультет", icon: "🏗️" },
+        { code: "ЮФ",   full: "Юридический факультет", icon: "⚖️" },
+        { code: "ФТН",  full: "Факультет технических наук", icon: "⚙️" }
+      ]
+    }
+  };
+
+  // Направления по уровню и факультету
+  const programsData = {
+    bak: {
+      "ФКНТ": [
+        "09.03.01 Информатика и вычислительная техника",
+        "09.03.02 Информационные системы и технологии",
+        "09.03.03 Прикладная информатика",
+        "09.03.04 Программная инженерия",
+        "02.03.03 Математическое обеспечение и администрирование информационных систем",
+        "01.03.04 Прикладная математика",
+        "11.03.01 Радиотехника"
+      ],
+      "ФЭиУ": [
+        "38.03.01 Экономика",
+        "38.03.02 Менеджмент",
+        "38.03.03 Управление персоналом",
+        "38.03.04 Государственное и муниципальное управление",
+        "38.03.05 Бизнес-информатика",
+        "38.03.06 Торговое дело",
+        "38.03.07 Товароведение"
+      ],
+      "ФСТиД": [
+        "43.03.01 Сервис",
+        "43.03.02 Туризм",
+        "43.03.03 Гостиничное дело",
+        "19.03.04 Технология продукции и организация общественного питания",
+        "29.03.01 Технология изделий лёгкой промышленности",
+        "29.03.03 Технология полиграфического и упаковочного производства",
+        "29.03.04 Технология художественной обработки материалов",
+        "29.03.00 Технологии лёгкой промышленности",
+        "54.03.01 Дизайн"
+      ],
+      "ФТН": [
+        "15.03.05 Конструкторско-технологическое обеспечение машиностроительных производств",
+        "15.03.06 Мехатроника и робототехника",
+        "15.03.02 Технологические машины и оборудование",
+        "35.03.06 Агроинженерия",
+        "35.03.02 Технология лесозаготовительных и деревообрабатывающих производств",
+        "18.03.02 Энерго- и ресурсосберегающие процессы в химической технологии",
+        "16.03.01 Горное дело",
+        "22.03.02 Металлургия"
+      ],
+      "ФЭТ": [
+        "13.03.01 Теплоэнергетика и теплотехника",
+        "13.03.02 Электроэнергетика и электротехника"
+      ],
+      "ФСГН": [
+        "41.03.01 Зарубежное регионоведение",
+        "41.03.05 Международные отношения",
+        "42.03.02 Журналистика",
+        "42.03.01 Реклама и связи с общественностью",
+        "39.03.02 Социальная работа"
+      ],
+      "ЮФ": [
+        "40.03.01 Юриспруденция"
+      ],
+      "ИПиБ": [
+        "19.03.01 Биотехнология",
+        "12.03.04 Биотехнические системы и технологии",
+        "19.03.03 Продукты питания животного происхождения",
+        "19.03.02 Продукты питания из растительного сырья",
+        "20.03.01 Техносферная безопасность",
+        "20.03.00 Техносферная безопасность и природообустройство"
+      ]
+    },
+    mag: {
+      "ФКНТ": [
+        "09.04.01 Информатика и вычислительная техника",
+        "09.04.04 Программная инженерия",
+        "02.04.03 Математическое обеспечение и администрирование информационных систем"
+      ],
+      "ФЭиУ": [
+        "38.04.01 Экономика",
+        "38.04.02 Менеджмент",
+        "38.04.03 Управление персоналом",
+        "38.04.04 Государственное и муниципальное управление",
+        "38.04.08 Финансы и кредит"
+      ],
+      "ФСТиД": [
+        "43.04.02 Туризм",
+        "54.04.01 Дизайн",
+        "19.04.04 Технология продукции и организация общественного питания",
+        "29.04.03 Технология полиграфического и упаковочного производства",
+        "29.04.05 Конструирование изделий лёгкой промышленности"
+      ],
+      "ФТН": [
+        "15.04.02 Технологические машины и оборудование",
+        "15.04.05 Конструкторско-технологическое обеспечение машиностроительных производств",
+        "35.04.06 Агроинженерия",
+        "22.04.02 Металлургия"
+      ],
+      "ФЭТ": [
+        "13.04.01 Теплоэнергетика и теплотехника"
+      ],
+      "ИПиБ": [
+        "19.04.01 Биотехнология",
+        "19.04.02 Продукты питания из растительного сырья",
+        "19.04.03 Продукты питания животного происхождения"
+      ],
+      "ЮФ": [
+        "40.04.01 Юриспруденция"
+      ]
+    },
+    asp: {
+      "ФКНТ": [ "Аспирантские программы ФКНТ" ],
+      "ФЭиУ": [ "Аспирантские программы ФЭиУ" ],
+      "ФТН":  [ "Аспирантские программы ФТН" ],
+      "ИПиБ": [ "Аспирантские программы ИПиБ" ]
+    },
+    spo: {
+      "ФКНТ": [
+        "09.02.02 Компьютерные сети",
+        "09.02.03 Программирование в компьютерных системах",
+        "09.02.06 Сетевое и системное администрирование",
+        "09.02.07 Информационные системы и программирование"
+      ],
+      "ФЭиУ": [
+        "38.02.01 Экономика и бухгалтерский учёт (по отраслям)",
+        "38.02.07 Банковское дело"
+      ],
+      "ФСТиД": [
+        "43.02.10 Туризм",
+        "43.02.15 Поварское и кондитерское дело",
+        "43.02.16 Туризм и гостеприимство",
+        "19.02.10 Технология продукции общественного питания"
+      ],
+      "ФЭТ": [
+        "13.02.07 Электроснабжение (по отраслям)"
+      ],
+      "СФ": [
+        "08.02.01 Строительство и эксплуатация зданий и сооружений"
+      ],
+      "ЮФ": [
+        "40.02.01 Право и организация социального обеспечения",
+        "40.02.04 Юриспруденция"
+      ],
+      "ФТН": [
+        "23.02.03 Техническое обслуживание и ремонт автомобильного транспорта"
+      ]
+    }
+  };
+
+  let currentLevel = null;   // bak, mag, asp, spo
+  let previousScreen = "screen-main";
+  let lastFaculty = null;
+  let lastFacultyFull = null;
+
+  //Навигация 
+
+  function goToScreen(id) {
+    document.querySelectorAll(".screen").forEach(s => s.classList.remove("active"));
+    document.getElementById(id).classList.add("active");
+  }
+
+  function openFacultyGrid(level) {
+    currentLevel = level;
+    previousScreen = "screen-doc-level";
+    const conf = facultyData[level];
+
+    document.getElementById("faculties-title").textContent = conf.title;
+    document.getElementById("faculties-subtitle").textContent = conf.subtitle;
+
+    const grid = document.getElementById("faculties-grid");
+    grid.innerHTML = "";
+
+    conf.faculties.forEach(f => {
+      const div = document.createElement("div");
+      div.className = "card";
+      div.innerHTML = `
+        <div class="card-emoji">${f.icon}</div>
+        <div class="card-code">${f.code}</div>
+        <div class="card-name">${f.full}</div>
+      `;
+      div.onclick = () => openPrograms(level, f.code, f.full);
+      grid.appendChild(div);
+    });
+
+    goToScreen("screen-faculties");
+  }
+
+  function goBackFromFaculties() {
+    goToScreen(previousScreen || "screen-doc-level");
+  }
+
+  function openPrograms(level, facultyCode, facultyFullName) {
+    lastFaculty = facultyCode;
+    lastFacultyFull = facultyFullName;
+
+    const list = document.getElementById("programs-list");
+    list.innerHTML = "";
+
+    const arr = (programsData[level] && programsData[level][facultyCode]) || [];
+
+    if (arr.length === 0) {
+      const p = document.createElement("p");
+      p.textContent = "Список программ уточняйте в приёмной комиссии данного факультета.";
+      p.style.textAlign = "center";
+      p.style.color = "#666";
+      list.appendChild(p);
+    } else {
+      arr.forEach(prog => {
+        const btn = document.createElement("button");
+        btn.className = "list-item";
+        btn.textContent = prog;
+        btn.onclick = () => createDocTicket(level, facultyCode, facultyFullName, prog);
+        list.appendChild(btn);
+      });
+    }
+
+    const levelText = {
+      bak: "Бакалавриат / специалитет",
+      mag: "Магистратура",
+      asp: "Аспирантура / ординатура",
+      spo: "Колледж (СПО)"
+    }[level];
+
+    document.getElementById("programs-title").textContent = "Направления подготовки";
+    document.getElementById("programs-subtitle").textContent =
+      `${levelText}. Факультет: ${facultyCode} — ${facultyFullName}`;
+
+    previousScreen = "screen-faculties";
+    goToScreen("screen-programs");
+  }
+
+  function goBackFromPrograms() {
+    goToScreen("screen-faculties");
+  }
+
+  // ---------- Генерация талонов ----------
+
+  function randomTicketNumber(prefix) {
+    const n = Math.floor(100 + Math.random() * 900);
+    return `Талон № ${prefix}-${n}`;
+  }
+
+  function createDocTicket(level, facultyCode, facultyFullName, program) {
+    const prefixMap = { bak: "БАК", mag: "МАГ", asp: "АСП", spo: "СПО" };
+    document.getElementById("ticket-number").textContent =
+      randomTicketNumber(prefixMap[level] || "DOC");
+
+    document.getElementById("ticket-main-text").textContent = program;
+    const levelText = {
+      bak: "Бакалавриат / специалитет",
+      mag: "Магистратура",
+      asp: "Аспирантура / ординатура",
+      spo: "Колледж (СПО)"
+    }[level];
+
+    document.getElementById("ticket-sub-text").textContent =
+      `${levelText}. Факультет: ${facultyCode} — ${facultyFullName}`;
+
+    goToScreen("screen-ticket");
+  }
+
+  function createConsultTicket(serviceName) {
+    document.getElementById("ticket-number").textContent =
+      randomTicketNumber("КОН");
+
+    document.getElementById("ticket-main-text").textContent = serviceName;
+    document.getElementById("ticket-sub-text").textContent =
+      "Тип услуги: консультация";
+
+    goToScreen("screen-ticket");
+  }
+
+  function createOperatorTicket(name, role, rating) {
+    document.getElementById("ticket-number").textContent =
+      randomTicketNumber("ОП");
+
+    document.getElementById("ticket-main-text").textContent =
+      `Оператор: ${name}`;
+    document.getElementById("ticket-sub-text").textContent =
+      `${role} · рейтинг ${rating.toFixed(1)}`;
+
+    goToScreen("screen-ticket");
+  }
+</script>
+</body>
+</html>
